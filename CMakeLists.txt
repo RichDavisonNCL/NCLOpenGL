@@ -1,84 +1,80 @@
-set(PROJECT_NAME GLTFLoader)
+set(PROJECT_NAME OpenGLRendering)
 
 ################################################################################
 # Source groups
 ################################################################################
 set(Header_Files
-    "GLTFLoader.h"
-    "json.hpp"
-    "tiny_gltf.h"
+    "OGLTexture.h"
+    "OGLShader.h"
+    "OGLRenderer.h"
+    "OGLMesh.h"
+    "OGLComputeShader.h"
 )
 source_group("Header Files" FILES ${Header_Files})
 
 set(Source_Files
-    "GLTFLoader.cpp"
+    "OGLTexture.cpp"
+    "OGLShader.cpp"
+    "OGLRenderer.cpp"
+    "OGLMesh.cpp"
+    "OGLComputeShader.cpp"
 )
 source_group("Source Files" FILES ${Source_Files})
+
+set(GLAD
+    "glad/gl.h"
+    "glad/gl.c"
+)
+source_group("GLAD" FILES ${GLAD})
 
 set(ALL_FILES
     ${Header_Files}
     ${Source_Files}
+    ${GLAD}
 )
 
-set(GLTF_LOADER_DIR
-	${CMAKE_CURRENT_SOURCE_DIR}
-)
+set_source_files_properties(${ALL_FILES} PROPERTIES LANGUAGE CXX)
 
 ################################################################################
 # Target
 ################################################################################
 add_library(${PROJECT_NAME} STATIC ${ALL_FILES})
 
-use_props(${PROJECT_NAME} "${CMAKE_CONFIGURATION_TYPES}" "${DEFAULT_CXX_PROPS}")
-set(ROOT_NAMESPACE GLTFLoader)
+#use_props(${PROJECT_NAME} "${CMAKE_CONFIGURATION_TYPES}" "${DEFAULT_CXX_PROPS}")
 
-set_target_properties(${PROJECT_NAME} PROPERTIES
-    VS_GLOBAL_KEYWORD "Win32Proj"
-)
-set_target_properties(${PROJECT_NAME} PROPERTIES
-    INTERPROCEDURAL_OPTIMIZATION_RELEASE "TRUE"
-)
-################################################################################
-# Compile definitions
-################################################################################
-target_compile_definitions(${PROJECT_NAME} PRIVATE
-    ";"
-    "UNICODE;"
-    "_UNICODE"
+set(ROOT_NAMESPACE OpenGLRendering)
+
+target_precompile_headers(${PROJECT_NAME} PRIVATE
+    <memory>
+    <unordered_set>
+    <vector>
+    <string>
+    <fstream>
+    <iostream>
+    <string>
+    <iosfwd>
+    <set>
+	<assert.h>
+
+    <Matrix2.h>
+    <Matrix3.h>
+    <Matrix4.h>
+    <Vector2.h>
+    <Vector3.h>
+    <Vector4.h>
+    <Quaternion.h>
 )
 
-################################################################################
-# Compile and link options
-################################################################################
-if(MSVC)
-    target_compile_options(${PROJECT_NAME} PRIVATE
-        $<$<CONFIG:Release>:
-            /Oi;
-            /Gy
-        >
-        /permissive-;
-        /std:c++latest;
-        /sdl;
-        /W3;
-        ${DEFAULT_CXX_DEBUG_INFORMATION_FORMAT};
-        ${DEFAULT_CXX_EXCEPTION_HANDLING};
-        /Y-
-    )
-    target_link_options(${PROJECT_NAME} PRIVATE
-        $<$<CONFIG:Release>:
-            /OPT:REF;
-            /OPT:ICF
-        >
-    )
-endif()
-
+target_include_directories (${PROJECT_NAME} 
+    PUBLIC ${CMAKE_SOURCE_DIR}/NCLCoreClasses
+    PUBLIC ${CMAKE_SOURCE_DIR}/OpenGLRendering
+)	
 ################################################################################
 # Dependencies
 ################################################################################
 set(ADDITIONAL_LIBRARY_DEPENDENCIES
-    "$<$<CONFIG:Release>:"
-        "common"
-    ">"
+    "NCLCoreClasses"
+    "opengl32.lib"
 )
-target_link_libraries(${PROJECT_NAME} PUBLIC "${ADDITIONAL_LIBRARY_DEPENDENCIES}")
 
+target_link_libraries(${PROJECT_NAME} PUBLIC "${ADDITIONAL_LIBRARY_DEPENDENCIES}")
