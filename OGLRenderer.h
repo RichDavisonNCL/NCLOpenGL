@@ -59,21 +59,11 @@ namespace NCL {
 
 			virtual bool SetVerticalSync(VerticalSyncState s);
 
-			void DrawString(const std::string& text, const Vector2&pos, const Vector4& colour = Vector4(0.75f, 0.75f, 0.75f,1), float size = 20.0f );
-			void DrawLine(const Vector3& start, const Vector3& end, const Vector4& colour);
-
-			//virtual Matrix4 SetupDebugLineMatrix()	const;
-			//virtual Matrix4 SetupDebugStringMatrix()const;
-
 		protected:			
 			void BeginFrame()	override;
 			void RenderFrame()	override;
 			void EndFrame()		override;
 			void SwapBuffers()  override;
-
-			void DrawDebugData();
-			void DrawDebugStrings();
-			void DrawDebugLines();
 
 			void BindShader(ShaderBase*s);
 			void BindTextureToShader(const TextureBase*t, const std::string& uniform, int texUnit) const;
@@ -86,28 +76,8 @@ namespace NCL {
 			HGLRC	renderContext;		//Permanent Rendering Context		
 #endif
 		private:
-			//struct DebugString {
-			//	Maths::Vector4 colour;
-			//	Maths::Vector2	pos;
-			//	float			size;
-			//	std::string		text;
-			//};
-
-			//struct DebugLine {
-			//	Maths::Vector3 start;
-			//	Maths::Vector3 end;
-			//	Maths::Vector4 colour;
-			//};
-
-			//OGLMesh* debugLinesMesh;
-			//OGLMesh* debugTextMesh;
-
 			OGLMesh*	boundMesh;
 			OGLShader*	boundShader;
-
-			//OGLShader*  debugShader;		
-			//std::vector<DebugString>	debugStrings;
-			//std::vector<DebugLine>		debugLines;
 
 			bool initState;
 			bool forceValidDebugState;
