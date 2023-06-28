@@ -7,14 +7,12 @@ Comments and queries to: richard-gordon.davison AT ncl.ac.uk
 https://research.ncl.ac.uk/game/
 */
 #pragma once
-#include "TextureBase.h"
+#include "Texture.h"
 #include "glad\gl.h"
-
-#include <string>
 
 namespace NCL {
 	namespace Rendering {
-		class OGLTexture : public TextureBase
+		class OGLTexture : public Texture
 		{
 		public:
 			//friend class OGLRenderer;
@@ -22,9 +20,18 @@ namespace NCL {
 			 OGLTexture(GLuint texToOwn);
 			~OGLTexture();
 
-			static TextureBase* RGBATextureFromData(char* data, int width, int height, int channels);
+			static Texture* RGBATextureFromData(char* data, int width, int height, int channels);
 
-			static TextureBase* RGBATextureFromFilename(const std::string&name);
+			static Texture* RGBATextureFromFilename(const std::string&name);
+
+			static Texture* LoadCubemap(
+				const std::string& xPosFile,
+				const std::string& xNegFile,
+				const std::string& yPosFile,
+				const std::string& yNegFile,
+				const std::string& zPosFile,
+				const std::string& zNegFile);
+
 
 			GLuint GetObjectID() const	{
 				return texID;

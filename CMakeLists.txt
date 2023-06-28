@@ -45,6 +45,7 @@ add_library(${PROJECT_NAME} STATIC ${ALL_FILES})
 set(ROOT_NAMESPACE OpenGLRendering)
 
 target_precompile_headers(${PROJECT_NAME} PRIVATE
+    #<chrono>
     <memory>
     <unordered_set>
     <vector>
@@ -62,6 +63,9 @@ target_precompile_headers(${PROJECT_NAME} PRIVATE
     <Vector2.h>
     <Vector3.h>
     <Vector4.h>
+	<Vector2i.h>
+    <Vector3i.h>
+    <Vector4i.h>
     <Quaternion.h>
 )
 

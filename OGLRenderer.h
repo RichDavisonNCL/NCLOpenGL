@@ -9,10 +9,6 @@ https://research.ncl.ac.uk/game/
 #pragma once
 #include "RendererBase.h"
 
-#include "Vector3.h"
-#include "Vector4.h"
-
-
 #ifdef _WIN32
 #include "windows.h"
 #endif
@@ -21,20 +17,16 @@ https://research.ncl.ac.uk/game/
 #define OPENGL_DEBUGGING
 #endif
 
-
-#include <string>
-#include <vector>
-
 namespace NCL {
-	class MeshGeometry;
+	class Mesh;
 
 	namespace Maths {
 		class Matrix4;
 	}
 
 	namespace Rendering {
-		class ShaderBase;
-		class TextureBase;
+		class Shader;
+		class Texture;
 
 		class OGLMesh;
 		class OGLShader;
@@ -65,9 +57,10 @@ namespace NCL {
 			void EndFrame()		override;
 			void SwapBuffers()  override;
 
-			void BindShader(ShaderBase*s);
-			void BindTextureToShader(const TextureBase*t, const std::string& uniform, int texUnit) const;
-			void BindMesh(MeshGeometry*m);
+			void UseShader(OGLShader& s);
+			void UseShader(Shader*s);
+			void BindTextureToShader(const Texture*t, const std::string& uniform, int texUnit) const;
+			void BindMesh(Mesh*m);
 			void DrawBoundMesh(int subLayer = 0, int numInstances = 1);
 #ifdef _WIN32
 			void InitWithWin32(Window& w);
@@ -75,10 +68,10 @@ namespace NCL {
 			HDC		deviceContext;		//...Device context?
 			HGLRC	renderContext;		//Permanent Rendering Context		
 #endif
-		private:
-			OGLMesh*	boundMesh;
-			OGLShader*	boundShader;
 
+			OGLMesh*	boundMesh;
+			OGLShader*	activeShader;
+		private:
 			bool initState;
 			bool forceValidDebugState;
 		};

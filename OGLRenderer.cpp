@@ -14,11 +14,7 @@ https://research.ncl.ac.uk/game/
 #include "SimpleFont.h"
 #include "TextureLoader.h"
 
-#include "Vector2.h"
-#include "Vector3.h"
-#include "Matrix4.h"
-
-#include "MeshGeometry.h"
+#include "Mesh.h"
 
 #ifdef _WIN32
 #include "Win32Window.h"
@@ -33,6 +29,8 @@ PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT = NULL;
 using namespace NCL;
 using namespace NCL::Rendering;
 
+using std::string;
+
 #ifdef OPENGL_DEBUGGING
 static void APIENTRY DebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *userParam);
 #endif;
@@ -42,17 +40,16 @@ OGLRenderer::OGLRenderer(Window& w) : RendererBase(w)	{
 #ifdef _WIN32
 	InitWithWin32(w);
 #endif
-	boundMesh	= nullptr;
-	boundShader = nullptr;
+	boundMesh		= nullptr;
+	activeShader	= nullptr;
 
-	windowWidth	= (int)w.GetScreenSize().x;
-	windowHeight	= (int)w.GetScreenSize().y;
+	windowSize = w.GetScreenSize();
+
+	forceValidDebugState = false;
 
 	if (initState) {
 		TextureLoader::RegisterAPILoadFunction(OGLTexture::RGBATextureFromFilename);
 	}
-
-	forceValidDebugState = false;
 }
 
 OGLRenderer::~OGLRenderer()	{
@@ -62,15 +59,15 @@ OGLRenderer::~OGLRenderer()	{
 }
 
 void OGLRenderer::OnWindowResize(int w, int h)	 {
-	windowWidth	= w;
-	windowHeight	= h;
-	glViewport(0, 0, windowWidth, windowHeight);
+	windowSize = Vector2i(w, h);
+
+	glViewport(0, 0, windowSize.x, windowSize.y);
 }
 
 void OGLRenderer::BeginFrame()		{
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	BindShader(nullptr);
+	UseShader(nullptr);
 	BindMesh(nullptr);
 }
 
@@ -85,35 +82,44 @@ void OGLRenderer::SwapBuffers()   {
 	::SwapBuffers(deviceContext);
 }
 
-void OGLRenderer::BindShader(ShaderBase*s) {
+void OGLRenderer::UseShader(OGLShader& oglShader) {
+	if (!oglShader.LoadSuccess()) {
+		std::cout << __FUNCTION__ << ": shader has failed to load correctly!" << std::endl;
+		activeShader = nullptr;
+		return;
+	}
+	glUseProgram(oglShader.programID);
+	activeShader = &oglShader;
+}
+
+void OGLRenderer::UseShader(Shader*s) {
 	if (!s) {
 		glUseProgram(0);
-		boundShader = nullptr;
+		activeShader = nullptr;
 	}
 	else if (OGLShader* oglShader = dynamic_cast<OGLShader*>(s)) {
-		glUseProgram(oglShader->programID);
-		boundShader = oglShader;
+		UseShader(*oglShader);
 	}
 	else {
-		std::cout << __FUNCTION__ << " has received invalid shader?!" << std::endl;
-		boundShader = nullptr;
+		std::cout << __FUNCTION__ << ": has received invalid shader?!" << std::endl;
+		activeShader = nullptr;
 	}
 }
 
-void OGLRenderer::BindMesh(MeshGeometry*m) {
+void OGLRenderer::BindMesh(Mesh*m) {
 	if (!m) {
 		glBindVertexArray(0);
 		boundMesh = nullptr;
 	}
 	else if (OGLMesh* oglMesh = dynamic_cast<OGLMesh*>(m)) {
 		if (oglMesh->GetVAO() == 0) {
-			std::cout << __FUNCTION__ << " has received invalid mesh?!" << std::endl;
+			std::cout << __FUNCTION__ << ": Mesh has not been uploaded!" << std::endl;
 		}
 		glBindVertexArray(oglMesh->GetVAO());
 		boundMesh = oglMesh;
 	}
 	else {
-		std::cout << __FUNCTION__ << " has received invalid mesh?!" << std::endl;
+		std::cout << __FUNCTION__ << ": has received invalid mesh?!" << std::endl;
 		boundMesh = nullptr;
 	}
 }
@@ -123,7 +129,7 @@ void OGLRenderer::DrawBoundMesh(int subLayer, int numInstances) {
 		std::cout << __FUNCTION__ << " has been called without a bound mesh!" << std::endl;
 		return;
 	}
-	if (!boundShader) {
+	if (!activeShader) {
 		std::cout << __FUNCTION__ << " has been called without a bound shader!" << std::endl;
 		return;
 	}
@@ -154,23 +160,33 @@ void OGLRenderer::DrawBoundMesh(int subLayer, int numInstances) {
 		case GeometryPrimitive::Patches:		mode = GL_PATCHES;			break;
 	}
 
-	if (boundMesh->GetIndexCount() > 0) {
-		glDrawElements(mode, count, GL_UNSIGNED_INT, (const GLvoid*)(offset * sizeof(unsigned int)));
+	if (numInstances > 1) {
+		if (boundMesh->GetIndexCount() > 0) {
+			glDrawElementsInstanced(mode, count, GL_UNSIGNED_INT, (const GLvoid*)(offset * sizeof(unsigned int)), numInstances);
+		}
+		else {
+			glDrawArraysInstanced(mode, 0, count, numInstances);
+		}
 	}
 	else {
-		glDrawArrays(mode, 0, count);
+		if (boundMesh->GetIndexCount() > 0) {
+			glDrawElements(mode, count, GL_UNSIGNED_INT, (const GLvoid*)(offset * sizeof(unsigned int)));
+		}
+		else {
+			glDrawArrays(mode, 0, count);
+		}
 	}
 }
 
-void OGLRenderer::BindTextureToShader(const TextureBase*t, const std::string& uniform, int texUnit) const{
+void OGLRenderer::BindTextureToShader(const Texture*t, const std::string& uniform, int texUnit) const{
 	GLint texID = 0;
 
-	if (!boundShader) {
+	if (!activeShader) {
 		std::cout << __FUNCTION__ << " has been called without a bound shader!" << std::endl;
 		return;//Debug message time!
 	}
 	
-	GLuint slot = glGetUniformLocation(boundShader->programID, uniform.c_str());
+	GLuint slot = glGetUniformLocation(activeShader->programID, uniform.c_str());
 
 	if (slot < 0) {
 		return;

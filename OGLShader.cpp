@@ -8,10 +8,11 @@ https://research.ncl.ac.uk/game/
 */
 #include "OGLShader.h"
 #include "Assets.h"
-#include <iostream>
 
 using namespace NCL;
 using namespace NCL::Rendering;
+
+using std::string;
 
 GLuint shaderTypes[(int)ShaderStages::MAXSIZE] = {
 	GL_VERTEX_SHADER,
@@ -21,7 +22,7 @@ GLuint shaderTypes[(int)ShaderStages::MAXSIZE] = {
 	GL_TESS_EVALUATION_SHADER
 };
 
-string ShaderNames[(int)ShaderStages::MAXSIZE] = {
+string shaderNames[(int)ShaderStages::MAXSIZE] = {
 	"Vertex",
 	"Fragment",
 	"Geometry",
@@ -30,7 +31,7 @@ string ShaderNames[(int)ShaderStages::MAXSIZE] = {
 };
 
 OGLShader::OGLShader(const string& vertex, const string& fragment, const string& geometry, const string& domain, const string& hull) :
-	ShaderBase(vertex, fragment, geometry, domain, hull) {
+	Shader(vertex, fragment, geometry, domain, hull) {
 
 	for (int i = 0; i < (int)ShaderStages::MAXSIZE; ++i) {
 		shaderIDs[i]	= 0;
@@ -52,9 +53,11 @@ void OGLShader::ReloadShader() {
 	for (int i = 0; i < (int)ShaderStages::MAXSIZE; ++i) {
 		if (!shaderFiles[i].empty()) {
 			if (Assets::ReadTextFile(Assets::SHADERDIR + shaderFiles[i], fileContents)) {
+				Preprocessor(fileContents);
+
 				shaderIDs[i] = glCreateShader(shaderTypes[i]);
 
-				std::cout << "Reading " << ShaderNames[i] << " shader " << shaderFiles[i] << std::endl;
+				std::cout << "Reading " << shaderNames[i] << " shader " << shaderFiles[i] << "\n";
 
 				const char* stringData	 = fileContents.c_str();
 				int			stringLength = (int)fileContents.length();
@@ -63,11 +66,11 @@ void OGLShader::ReloadShader() {
 
 				glGetShaderiv(shaderIDs[i], GL_COMPILE_STATUS, &shaderValid[i]);
 		
-				if (shaderValid[i] != GL_TRUE) {
-					std::cout << ShaderNames[i] << " shader " << " has failed!" << std::endl;
+				if (shaderValid[i] == GL_TRUE) {					
+					glAttachShader(programID, shaderIDs[i]);
 				}
 				else {
-					glAttachShader(programID, shaderIDs[i]);
+					std::cout << shaderNames[i] << " shader " << shaderFiles[i] << " has failed!" << "\n";
 				}
 				PrintCompileLog(shaderIDs[i]);
 			}
@@ -79,10 +82,10 @@ void OGLShader::ReloadShader() {
 	PrintLinkLog(programID);
 
 	if (programValid != GL_TRUE) {
-		std::cout << "This shader has failed!" << std::endl;
+		std::cout << "This shader has failed!" << "\n";
 	}
 	else {
-		std::cout << "Shader loaded!" << std::endl;
+		std::cout << "Shader loaded!" << "\n";
 	}
 }
 
@@ -104,10 +107,11 @@ void	OGLShader::PrintCompileLog(GLuint object) {
 	int logLength = 0;
 	glGetShaderiv(object, GL_INFO_LOG_LENGTH, &logLength);
 	if (logLength) {
+
 		char* tempData = new char[logLength];
 		glGetShaderInfoLog(object, logLength, NULL, tempData);
-		std::cout << "Compile Log:\n" << tempData << std::endl;
-		delete tempData;
+		std::cout << "Compile Log:\n" << tempData << "\n";
+		delete[] tempData;
 	}
 }
 
@@ -118,7 +122,55 @@ void	OGLShader::PrintLinkLog(GLuint program) {
 	if (logLength) {
 		char* tempData = new char[logLength];
 		glGetProgramInfoLog(program, logLength, NULL, tempData);
-		std::cout << "Link Log:\n" << tempData << std::endl;
-		delete tempData;
+		std::cout << "Link Log:\n" << tempData << "\n";
+		delete[] tempData;
 	}
+}
+
+bool	OGLShader::Preprocessor(string& shaderFile) {
+	size_t lineStart	= 0;
+	size_t lineEnd		= 0;
+
+	std::set<std::string> includes;
+
+	while(true) {
+		lineEnd = shaderFile.find('\n', lineStart);
+		if (lineEnd == string::npos) {
+			return true;
+		}
+
+		size_t lineLength = lineEnd - lineStart;
+
+		std::string_view substr = std::string_view(shaderFile).substr(lineStart, lineLength);
+
+		size_t hasInclude = substr.find("#include");
+		 
+		if (hasInclude != string::npos) {
+			size_t nameStart	= substr.find_first_of("\"");
+			size_t nameEnd		= substr.find_last_of("\"");
+
+			std::string filename = std::string(substr.substr(nameStart+1, nameEnd - nameStart-1));
+
+			auto search = includes.find(filename);
+
+			if (search != includes.end()) {
+				std::cout << __FUNCTION__ << ": Preprocessor failure! Recursive inclusion of file " << filename << "\n";
+				return false;
+			}
+
+			includes.insert(filename);
+
+			std::string newFile;
+			if (!Assets::ReadTextFile(Assets::SHADERDIR + filename, newFile)) {
+				std::cout << __FUNCTION__ << ": Preprocessor failure! No include file " << filename << " can be found.\n";
+				return false;
+			}
+			else {
+				shaderFile.replace(lineStart, lineLength, newFile);
+				continue; //Don't move on, the replaced file could have additional includes!
+			}	
+		}
+		lineStart = lineEnd+1;
+	}
+	return true;
 }

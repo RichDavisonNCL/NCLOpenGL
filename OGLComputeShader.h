@@ -9,37 +9,32 @@ https://research.ncl.ac.uk/game/
 #pragma once
 #include "glad\gl.h"
 
-#include <string>
-
 namespace NCL {
 	class OGLComputeShader	{
 	public:
 		OGLComputeShader(const std::string& s);
 		~OGLComputeShader();
 
-		int GetProgramID() const {
+		GLuint GetProgramID() const {
 			return programID;
 		}
 
 		void Bind() const;
+		void Unbind();
 
 		//how many thread groups should be launched?
 		//number of threads within a group is determined shader side
-		void Execute(int x, int y = 1, int z = 1) const;
+		void Execute(unsigned int x, unsigned int y = 1, unsigned int z = 1) const;
 
-		void GetThreadsInGroup(int&x, int& y, int&z) const;
-
-		int GetThreadXCount() const;
-		int GetThreadYCount() const;
-		int GetThreadZCount() const;
-
-		void Unbind();
+		Maths::Vector3i GetThreadGroupSize() const {
+			return threadsInGroup;
+		}
 
 	protected:
-		GLuint	shaderID;
-		GLuint	programID;
-		int		programValid;
-		GLint	threadsInGroup[3];
+		GLuint		shaderID;
+		GLuint		programID;
+		int			programValid;
+		Maths::Vector3i	threadsInGroup;
 	};
 }
 

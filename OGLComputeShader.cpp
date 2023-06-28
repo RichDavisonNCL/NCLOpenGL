@@ -9,7 +9,6 @@ https://research.ncl.ac.uk/game/
 #include "OGLComputeShader.h"
 #include "OGLShader.h"
 #include "Assets.h"
-#include <iostream>
 
 using namespace NCL;
 using namespace Rendering;
@@ -31,17 +30,13 @@ OGLComputeShader::OGLComputeShader(const std::string& s)	{
 	glLinkProgram(programID);
 	glGetProgramiv(programID, GL_LINK_STATUS, &programValid);
 
-	std::cout << "Loading compute shader " << s << std::endl;
+	std::cout << "Loading compute shader " << s << "\n";
 	if (programValid != GL_TRUE) {
-		std::cout << "Compute shader has failed!" << std::endl;
-		threadsInGroup[0] = 0;
-		threadsInGroup[1] = 0;
-		threadsInGroup[2] = 0;
+		std::cout << "Compute shader has failed!\n";
 	}
 	else {
-		std::cout << "Compute shader loaded!" << std::endl;
-		
-		glGetProgramiv(programID, GL_COMPUTE_WORK_GROUP_SIZE, threadsInGroup);
+		std::cout << "Compute shader loaded!\n";		
+		glGetProgramiv(programID, GL_COMPUTE_WORK_GROUP_SIZE, threadsInGroup.array);
 	}
 	OGLShader::PrintCompileLog(shaderID);
 };
@@ -52,7 +47,7 @@ OGLComputeShader::~OGLComputeShader()	{
 	glDeleteProgram(programID);
 }
 
-void OGLComputeShader::Execute(int x, int y, int z) const {
+void OGLComputeShader::Execute(unsigned int x, unsigned int y, unsigned int z) const {
 	glDispatchCompute(x, y, z);
 }
 
@@ -62,22 +57,4 @@ void OGLComputeShader::Bind() const {
 
 void OGLComputeShader::Unbind() {
 	glUseProgram(0);
-}
-
-void OGLComputeShader::GetThreadsInGroup(int&x, int& y, int&z)const {
-	x = threadsInGroup[0];
-	y = threadsInGroup[1];
-	z = threadsInGroup[2];
-}
-
-int OGLComputeShader::GetThreadXCount() const {
-	return threadsInGroup[0];
-}
-
-int OGLComputeShader::GetThreadYCount() const {
-	return threadsInGroup[1];
-}
-
-int OGLComputeShader::GetThreadZCount() const {
-	return threadsInGroup[2];
 }
