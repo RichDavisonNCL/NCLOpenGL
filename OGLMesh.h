@@ -7,14 +7,12 @@ Comments and queries to: richard-gordon.davison AT ncl.ac.uk
 https://research.ncl.ac.uk/game/
 */
 #pragma once
-#include "MeshGeometry.h"
+#include "Mesh.h"
 #include "glad\gl.h"
-
-#include <string>
 
 namespace NCL {
 	namespace Rendering {
-		class OGLMesh : public NCL::MeshGeometry
+		class OGLMesh : public NCL::Mesh
 		{
 		public:
 			friend class OGLRenderer;
@@ -29,12 +27,9 @@ namespace NCL {
 
 		protected:
 			GLuint	GetVAO()			const { return vao;			}
-			void BindVertexAttribute(int attribSlot, int bufferID, int bindingID, int elementCount, int elementSize, int elementOffset);
-
-			int		subCount;
+			void	BindVertexAttribute(int attribSlot, int bufferID, int bindingID, int elementCount, int elementSize, int elementOffset);
 
 			GLuint vao;
-			GLuint oglType;
 			GLuint attributeBuffers[VertexAttribute::MAX_ATTRIBUTES];
 			GLuint indexBuffer;
 		};

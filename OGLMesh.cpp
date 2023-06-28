@@ -7,9 +7,6 @@ Comments and queries to: richard-gordon.davison AT ncl.ac.uk
 https://research.ncl.ac.uk/game/
 */
 #include "OGLMesh.h"
-#include "Vector2.h"
-#include "Vector3.h"
-#include "Vector4.h"
 
 using namespace NCL;
 using namespace NCL::Rendering;
@@ -17,7 +14,6 @@ using namespace NCL::Maths;
 
 OGLMesh::OGLMesh() {
 	vao			= 0;
-	subCount	= 1;
 
 	for (int i = 0; i < VertexAttribute::MAX_ATTRIBUTES; ++i) {
 		attributeBuffers[i] = 0;
@@ -25,9 +21,8 @@ OGLMesh::OGLMesh() {
 	indexBuffer = 0;
 }
 
-OGLMesh::OGLMesh(const std::string&filename) : MeshGeometry(filename){
+OGLMesh::OGLMesh(const std::string&filename) : Mesh(filename){
 	vao		 = 0;
-	subCount = 1;
 
 	for (int i = 0; i < VertexAttribute::MAX_ATTRIBUTES; ++i) {
 		attributeBuffers[i] = 0;

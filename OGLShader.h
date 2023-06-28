@@ -7,16 +7,16 @@ Comments and queries to: richard-gordon.davison AT ncl.ac.uk
 https://research.ncl.ac.uk/game/
 */
 #pragma once
-#include "ShaderBase.h"
+#include "Shader.h"
 #include "glad\gl.h"
 
 namespace NCL {
 	namespace Rendering {
-		class OGLShader : public ShaderBase
+		class OGLShader : public Shader
 		{
 		public:
 			friend class OGLRenderer;
-			OGLShader(const string& vertex, const string& fragment, const string& geometry = "", const string& domain = "", const string& hull = "");
+			OGLShader(const std::string& vertex, const std::string& fragment, const std::string& geometry = "", const std::string& domain = "", const std::string& hull = "");
 			~OGLShader();
 
 			void ReloadShader() override;
@@ -31,6 +31,8 @@ namespace NCL {
 			
 			static void	PrintCompileLog(GLuint object);
 			static void	PrintLinkLog(GLuint program);
+
+			static bool Preprocessor(std::string& shaderFile);
 
 		protected:
 			void	DeleteIDs();
