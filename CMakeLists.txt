@@ -34,7 +34,7 @@ set(ALL_FILES
 )
 
 set_source_files_properties(${ALL_FILES} PROPERTIES LANGUAGE CXX)
-
+ 
 ################################################################################
 # Target
 ################################################################################
@@ -45,7 +45,7 @@ add_library(${PROJECT_NAME} STATIC ${ALL_FILES})
 set(ROOT_NAMESPACE OpenGLRendering)
 
 target_precompile_headers(${PROJECT_NAME} PRIVATE
-    #<chrono>
+    <chrono>
     <memory>
     <unordered_set>
     <vector>
