@@ -1,15 +1,18 @@
-/*
-Part of Newcastle University's Game Engineering source code.
+/******************************************************************************
+This file is part of the Newcastle OpenGL Tutorial Series
 
-Use as you see fit!
-
-Comments and queries to: richard-gordon.davison AT ncl.ac.uk
-https://research.ncl.ac.uk/game/
-*/
+Author:Rich Davison
+Contact:richgdavison@gmail.com
+License: MIT (see LICENSE file at the top of the source tree)
+*/////////////////////////////////////////////////////////////////////////////
 #pragma once
 #include "glad\gl.h"
 
-namespace NCL {
+namespace NCL::Rendering {
+
+	using UniqueOGLComputeShader = std::unique_ptr<class OGLComputeShader>;
+	using SharedOGLComputeShader = std::shared_ptr<class OGLComputeShader>;
+
 	class OGLComputeShader	{
 	public:
 		OGLComputeShader(const std::string& s);
@@ -37,4 +40,3 @@ namespace NCL {
 		Maths::Vector3i	threadsInGroup;
 	};
 }
-

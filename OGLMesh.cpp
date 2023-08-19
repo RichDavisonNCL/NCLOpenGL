@@ -1,11 +1,10 @@
-/*
-Part of Newcastle University's Game Engineering source code.
+/******************************************************************************
+This file is part of the Newcastle OpenGL Tutorial Series
 
-Use as you see fit!
-
-Comments and queries to: richard-gordon.davison AT ncl.ac.uk
-https://research.ncl.ac.uk/game/
-*/
+Author:Rich Davison
+Contact:richgdavison@gmail.com
+License: MIT (see LICENSE file at the top of the source tree)
+*/////////////////////////////////////////////////////////////////////////////
 #include "OGLMesh.h"
 
 using namespace NCL;
@@ -14,15 +13,6 @@ using namespace NCL::Maths;
 
 OGLMesh::OGLMesh() {
 	vao			= 0;
-
-	for (int i = 0; i < VertexAttribute::MAX_ATTRIBUTES; ++i) {
-		attributeBuffers[i] = 0;
-	}
-	indexBuffer = 0;
-}
-
-OGLMesh::OGLMesh(const std::string&filename) : Mesh(filename){
-	vao		 = 0;
 
 	for (int i = 0; i < VertexAttribute::MAX_ATTRIBUTES; ++i) {
 		attributeBuffers[i] = 0;
@@ -128,15 +118,15 @@ void OGLMesh::UpdateGPUBuffers(unsigned int startVertex, unsigned int vertexCoun
 		glBufferSubData(GL_ARRAY_BUFFER, startVertex * sizeof(Vector4), vertexCount * sizeof(Vector4), (char*)&GetTangentData()[startVertex]);
 	}
 
-	//if (!GetSkinWeightData().empty()) {	//Skeleton weights
-	//	glBindBuffer(GL_ARRAY_BUFFER, attributeBuffers[VertexAttribute::JointWeights]);
-	//	glBufferSubData(GL_ARRAY_BUFFER, startVertex * sizeof(Vector4), vertexCount * sizeof(Vector4), (char*)&GetJoint()[startVertex]);
-	//}
+	if (!GetSkinWeightData().empty()) {	//Skeleton weights
+		glBindBuffer(GL_ARRAY_BUFFER, attributeBuffers[VertexAttribute::JointWeights]);
+		glBufferSubData(GL_ARRAY_BUFFER, startVertex * sizeof(Vector4), vertexCount * sizeof(Vector4), (char*)&GetSkinWeightData()[startVertex]);
+	}
 
-	//if (!GetSkinIndexData().empty()) {	//Skeleton joint indices
-	//	glBindBuffer(GL_ARRAY_BUFFER, attributeBuffers[VertexAttribute::TextureCoords]);
-	//	glBufferSubData(GL_ARRAY_BUFFER, startVertex * sizeof(Vector2), vertexCount * sizeof(Vector2), (char*)&GetTextureCoordData()[startVertex]);
-	//}
+	if (!GetSkinIndexData().empty()) {	//Skeleton joint indices
+		glBindBuffer(GL_ARRAY_BUFFER, attributeBuffers[VertexAttribute::TextureCoords]);
+		glBufferSubData(GL_ARRAY_BUFFER, startVertex * sizeof(Vector4i), vertexCount * sizeof(Vector4i), (char*)&GetSkinIndexData()[startVertex]);
+	}
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 

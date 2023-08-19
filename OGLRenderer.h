@@ -1,11 +1,10 @@
-/*
-Part of Newcastle University's Game Engineering source code.
+/******************************************************************************
+This file is part of the Newcastle OpenGL Tutorial Series
 
-Use as you see fit!
-
-Comments and queries to: richard-gordon.davison AT ncl.ac.uk
-https://research.ncl.ac.uk/game/
-*/
+Author:Rich Davison
+Contact:richgdavison@gmail.com
+License: MIT (see LICENSE file at the top of the source tree)
+*/////////////////////////////////////////////////////////////////////////////
 #pragma once
 #include "RendererBase.h"
 
@@ -18,23 +17,22 @@ https://research.ncl.ac.uk/game/
 #endif
 
 namespace NCL {
-	class Mesh;
-
 	namespace Maths {
 		class Matrix4;
 	}
 
-	namespace Rendering {
+	namespace Rendering {	
+		class Mesh;
 		class Shader;
 		class Texture;
 
 		class OGLMesh;
 		class OGLShader;
+		class OGLTexture;
 
 		class SimpleFont;
 		
-		class OGLRenderer : public RendererBase
-		{
+		class OGLRenderer : public RendererBase	{
 		public:
 			friend class OGLRenderer;
 			OGLRenderer(Window& w);
@@ -45,10 +43,6 @@ namespace NCL {
 				return initState;
 			}
 
-			void ForceValidDebugState(bool newState) {
-				forceValidDebugState = newState;
-			}
-
 			virtual bool SetVerticalSync(VerticalSyncState s);
 
 		protected:			
@@ -57,10 +51,9 @@ namespace NCL {
 			void EndFrame()		override;
 			void SwapBuffers()  override;
 
-			void UseShader(OGLShader& s);
-			void UseShader(Shader*s);
-			void BindTextureToShader(const Texture*t, const std::string& uniform, int texUnit) const;
-			void BindMesh(Mesh*m);
+			void UseShader(const OGLShader& s);
+			void BindTextureToShader(const OGLTexture& t, const std::string& uniform, int texUnit) const;
+			void BindMesh(const OGLMesh& m);
 			void DrawBoundMesh(int subLayer = 0, int numInstances = 1);
 #ifdef _WIN32
 			void InitWithWin32(Window& w);
@@ -69,11 +62,10 @@ namespace NCL {
 			HGLRC	renderContext;		//Permanent Rendering Context		
 #endif
 
-			OGLMesh*	boundMesh;
-			OGLShader*	activeShader;
+			const OGLMesh*		boundMesh;
+			const OGLShader*	activeShader;
 		private:
 			bool initState;
-			bool forceValidDebugState;
 		};
 	}
 }

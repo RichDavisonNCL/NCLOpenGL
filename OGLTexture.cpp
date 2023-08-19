@@ -1,11 +1,10 @@
-/*
-Part of Newcastle University's Game Engineering source code.
+/******************************************************************************
+This file is part of the Newcastle OpenGL Tutorial Series
 
-Use as you see fit!
-
-Comments and queries to: richard-gordon.davison AT ncl.ac.uk
-https://research.ncl.ac.uk/game/
-*/
+Author:Rich Davison
+Contact:richgdavison@gmail.com
+License: MIT (see LICENSE file at the top of the source tree)
+*/////////////////////////////////////////////////////////////////////////////
 #include "OGLTexture.h"
 #include "OGLRenderer.h"
 
@@ -14,8 +13,7 @@ https://research.ncl.ac.uk/game/
 using namespace NCL;
 using namespace NCL::Rendering;
 
-OGLTexture::OGLTexture()
-{
+OGLTexture::OGLTexture()	{
 	glGenTextures(1, &texID);
 }
 
@@ -23,13 +21,13 @@ OGLTexture::OGLTexture(GLuint texToOwn) {
 	texID = texToOwn;
 }
 
-OGLTexture::~OGLTexture()
-{
+OGLTexture::~OGLTexture()	{
 	glDeleteTextures(1, &texID);
 }
 
-Texture* OGLTexture::RGBATextureFromData(char* data, int width, int height, int channels) {
-	OGLTexture* tex = new OGLTexture();
+UniqueOGLTexture OGLTexture::TextureFromData(char* data, int width, int height, int channels) {
+	UniqueOGLTexture tex = std::make_unique<OGLTexture>();
+	tex->dimensions = { width, height };
 
 	int dataSize = width * height * channels; //This always assumes data is 1 byte per channel
 
@@ -37,19 +35,17 @@ Texture* OGLTexture::RGBATextureFromData(char* data, int width, int height, int 
 
 	switch (channels) {
 		case 1: sourceType = GL_RED	; break;
-
 		case 2: sourceType = GL_RG	; break;
 		case 3: sourceType = GL_RGB	; break;
 		case 4: sourceType = GL_RGBA; break;
-		//default:
 	}
 
 	glBindTexture(GL_TEXTURE_2D, tex->texID);
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, sourceType, GL_UNSIGNED_BYTE, data);
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	glGenerateMipmap(GL_TEXTURE_2D);
 
@@ -58,7 +54,7 @@ Texture* OGLTexture::RGBATextureFromData(char* data, int width, int height, int 
 	return tex;
 }
 
-Texture* OGLTexture::RGBATextureFromFilename(const std::string&name) {
+UniqueOGLTexture OGLTexture::TextureFromFile(const std::string&name) {
 	char* texData	= nullptr;
 	int width		= 0;
 	int height		= 0;
@@ -66,14 +62,14 @@ Texture* OGLTexture::RGBATextureFromFilename(const std::string&name) {
 	int flags		= 0;
 	TextureLoader::LoadTexture(name, texData, width, height, channels, flags);  
 
-	Texture* glTex = RGBATextureFromData(texData, width, height, channels);
+	UniqueOGLTexture glTex = TextureFromData(texData, width, height, channels);
 
 	free(texData);
 
 	return glTex;
 }
 
-Texture* OGLTexture::LoadCubemap(
+UniqueOGLTexture OGLTexture::LoadCubemap(
 	const std::string& xPosFile, 
 	const std::string& xNegFile, 
 	const std::string& yPosFile, 
@@ -97,7 +93,8 @@ Texture* OGLTexture::LoadCubemap(
 		}
 	}
 
-	OGLTexture* tex = new OGLTexture();
+	UniqueOGLTexture tex = std::make_unique<OGLTexture>();
+	tex->dimensions = { width[0], height[0] };
 
 	glBindTexture(GL_TEXTURE_CUBE_MAP, tex->GetObjectID());
 
@@ -110,6 +107,7 @@ Texture* OGLTexture::LoadCubemap(
 	glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameterf(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 

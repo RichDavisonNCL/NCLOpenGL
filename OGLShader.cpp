@@ -1,11 +1,10 @@
-/*
-Part of Newcastle University's Game Engineering source code.
+/******************************************************************************
+This file is part of the Newcastle OpenGL Tutorial Series
 
-Use as you see fit!
-
-Comments and queries to: richard-gordon.davison AT ncl.ac.uk
-https://research.ncl.ac.uk/game/
-*/
+Author:Rich Davison
+Contact:richgdavison@gmail.com
+License: MIT (see LICENSE file at the top of the source tree)
+*/////////////////////////////////////////////////////////////////////////////
 #include "OGLShader.h"
 #include "Assets.h"
 
@@ -107,11 +106,9 @@ void	OGLShader::PrintCompileLog(GLuint object) {
 	int logLength = 0;
 	glGetShaderiv(object, GL_INFO_LOG_LENGTH, &logLength);
 	if (logLength) {
-
-		char* tempData = new char[logLength];
-		glGetShaderInfoLog(object, logLength, NULL, tempData);
-		std::cout << "Compile Log:\n" << tempData << "\n";
-		delete[] tempData;
+		std::string temp(logLength, ' ');
+		glGetShaderInfoLog(object, logLength, NULL, temp.data());
+		std::cout << "Compile Log:\n" << temp << "\n";
 	}
 }
 
@@ -120,10 +117,9 @@ void	OGLShader::PrintLinkLog(GLuint program) {
 	glGetProgramiv(program, GL_INFO_LOG_LENGTH, &logLength);
 
 	if (logLength) {
-		char* tempData = new char[logLength];
-		glGetProgramInfoLog(program, logLength, NULL, tempData);
-		std::cout << "Link Log:\n" << tempData << "\n";
-		delete[] tempData;
+		std::string temp(logLength, ' ');
+		glGetProgramInfoLog(program, logLength, NULL, temp.data());
+		std::cout << "Link Log:\n" << temp << "\n";
 	}
 }
 

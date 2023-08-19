@@ -1,37 +1,35 @@
-/*
-Part of Newcastle University's Game Engineering source code.
+/******************************************************************************
+This file is part of the Newcastle OpenGL Tutorial Series
 
-Use as you see fit!
-
-Comments and queries to: richard-gordon.davison AT ncl.ac.uk
-https://research.ncl.ac.uk/game/
-*/
+Author:Rich Davison
+Contact:richgdavison@gmail.com
+License: MIT (see LICENSE file at the top of the source tree)
+*/////////////////////////////////////////////////////////////////////////////
 #pragma once
 #include "Mesh.h"
 #include "glad\gl.h"
 
-namespace NCL {
-	namespace Rendering {
-		class OGLMesh : public NCL::Mesh
-		{
-		public:
-			friend class OGLRenderer;
-			OGLMesh();
-			OGLMesh(const std::string&filename);
-			~OGLMesh();
+namespace NCL::Rendering {	
+	using UniqueOGLMesh		= std::unique_ptr<class OGLMesh>;
+	using SharedOGLMesh		= std::shared_ptr<class OGLMesh>;
 
-			void RecalculateNormals();
+	class OGLMesh : public Mesh	{
+	public:
+		friend class OGLRenderer;
+		OGLMesh();
+		~OGLMesh();
 
-			void UploadToGPU(Rendering::RendererBase* renderer = nullptr) override;
-			void UpdateGPUBuffers(unsigned int startVertex, unsigned int vertexCount);
+		void RecalculateNormals();
 
-		protected:
-			GLuint	GetVAO()			const { return vao;			}
-			void	BindVertexAttribute(int attribSlot, int bufferID, int bindingID, int elementCount, int elementSize, int elementOffset);
+		void UploadToGPU(Rendering::RendererBase* renderer = nullptr) override;
+		void UpdateGPUBuffers(unsigned int startVertex, unsigned int vertexCount);
 
-			GLuint vao;
-			GLuint attributeBuffers[VertexAttribute::MAX_ATTRIBUTES];
-			GLuint indexBuffer;
-		};
-	}
+	protected:
+		GLuint	GetVAO()			const { return vao;			}
+		void	BindVertexAttribute(int attribSlot, int bufferID, int bindingID, int elementCount, int elementSize, int elementOffset);
+
+		GLuint vao;
+		GLuint attributeBuffers[VertexAttribute::MAX_ATTRIBUTES];
+		GLuint indexBuffer;
+	};
 }

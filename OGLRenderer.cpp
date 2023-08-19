@@ -1,11 +1,10 @@
-/*
-Part of Newcastle University's Game Engineering source code.
+/******************************************************************************
+This file is part of the Newcastle OpenGL Tutorial Series
 
-Use as you see fit!
-
-Comments and queries to: richard-gordon.davison AT ncl.ac.uk
-https://research.ncl.ac.uk/game/
-*/
+Author:Rich Davison
+Contact:richgdavison@gmail.com
+License: MIT (see LICENSE file at the top of the source tree)
+*/////////////////////////////////////////////////////////////////////////////
 #include "OGLRenderer.h"
 #include "OGLShader.h"
 #include "OGLMesh.h"
@@ -44,12 +43,6 @@ OGLRenderer::OGLRenderer(Window& w) : RendererBase(w)	{
 	activeShader	= nullptr;
 
 	windowSize = w.GetScreenSize();
-
-	forceValidDebugState = false;
-
-	if (initState) {
-		TextureLoader::RegisterAPILoadFunction(OGLTexture::RGBATextureFromFilename);
-	}
 }
 
 OGLRenderer::~OGLRenderer()	{
@@ -67,8 +60,8 @@ void OGLRenderer::OnWindowResize(int w, int h)	 {
 void OGLRenderer::BeginFrame()		{
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	UseShader(nullptr);
-	BindMesh(nullptr);
+	glBindVertexArray(0);
+	glUseProgram(0);
 }
 
 void OGLRenderer::RenderFrame()		{
@@ -82,55 +75,31 @@ void OGLRenderer::SwapBuffers()   {
 	::SwapBuffers(deviceContext);
 }
 
-void OGLRenderer::UseShader(OGLShader& oglShader) {
+void OGLRenderer::UseShader(const OGLShader& oglShader) {
 	if (!oglShader.LoadSuccess()) {
-		std::cout << __FUNCTION__ << ": shader has failed to load correctly!" << std::endl;
+		std::cout << __FUNCTION__ << ": shader has failed to load correctly!\n";
 		activeShader = nullptr;
 		return;
 	}
-	glUseProgram(oglShader.programID);
+	glUseProgram(oglShader.GetProgramID());
 	activeShader = &oglShader;
 }
 
-void OGLRenderer::UseShader(Shader*s) {
-	if (!s) {
-		glUseProgram(0);
-		activeShader = nullptr;
+void OGLRenderer::BindMesh(const OGLMesh& m) {
+	if (m.GetVAO() == 0) {
+		std::cout << __FUNCTION__ << ": Mesh has not been uploaded!\n";
 	}
-	else if (OGLShader* oglShader = dynamic_cast<OGLShader*>(s)) {
-		UseShader(*oglShader);
-	}
-	else {
-		std::cout << __FUNCTION__ << ": has received invalid shader?!" << std::endl;
-		activeShader = nullptr;
-	}
-}
-
-void OGLRenderer::BindMesh(Mesh*m) {
-	if (!m) {
-		glBindVertexArray(0);
-		boundMesh = nullptr;
-	}
-	else if (OGLMesh* oglMesh = dynamic_cast<OGLMesh*>(m)) {
-		if (oglMesh->GetVAO() == 0) {
-			std::cout << __FUNCTION__ << ": Mesh has not been uploaded!" << std::endl;
-		}
-		glBindVertexArray(oglMesh->GetVAO());
-		boundMesh = oglMesh;
-	}
-	else {
-		std::cout << __FUNCTION__ << ": has received invalid mesh?!" << std::endl;
-		boundMesh = nullptr;
-	}
+	glBindVertexArray(m.GetVAO());
+	boundMesh = &m;
 }
 
 void OGLRenderer::DrawBoundMesh(int subLayer, int numInstances) {
 	if (!boundMesh) {
-		std::cout << __FUNCTION__ << " has been called without a bound mesh!" << std::endl;
+		std::cout << __FUNCTION__ << " has been called without a bound mesh!\n";
 		return;
 	}
 	if (!activeShader) {
-		std::cout << __FUNCTION__ << " has been called without a bound shader!" << std::endl;
+		std::cout << __FUNCTION__ << " has been called without a bound shader!\n";
 		return;
 	}
 	GLuint	mode	= 0;
@@ -178,22 +147,19 @@ void OGLRenderer::DrawBoundMesh(int subLayer, int numInstances) {
 	}
 }
 
-void OGLRenderer::BindTextureToShader(const Texture*t, const std::string& uniform, int texUnit) const{
-	GLint texID = 0;
+void OGLRenderer::BindTextureToShader(const OGLTexture& t, const std::string& uniform, int texUnit) const{
+	GLint texID = t.GetObjectID();
 
 	if (!activeShader) {
-		std::cout << __FUNCTION__ << " has been called without a bound shader!" << std::endl;
+		std::cout << __FUNCTION__ << " has been called without a bound shader!\n";
 		return;//Debug message time!
 	}
 	
-	GLuint slot = glGetUniformLocation(activeShader->programID, uniform.c_str());
+	GLuint slot = glGetUniformLocation(activeShader->GetProgramID(), uniform.c_str());
 
 	if (slot < 0) {
-		return;
-	}
 
-	if (const OGLTexture* oglTexture = dynamic_cast<const OGLTexture*>(t)) {
-		texID = oglTexture->GetObjectID();
+		return;
 	}
 
 	glActiveTexture(GL_TEXTURE0 + texUnit);
@@ -202,34 +168,12 @@ void OGLRenderer::BindTextureToShader(const Texture*t, const std::string& unifor
 	glUniform1i(slot, texUnit);
 }
 
-//void OGLRenderer::DrawDebugLines() {
-//	vector<Vector3> vertPos;
-//	vector<Vector4> vertCol;
-//
-//	for (DebugLine&s : debugLines) {
-//		vertPos.emplace_back(s.start);
-//		vertPos.emplace_back(s.end);
-//
-//		vertCol.emplace_back(s.colour);
-//		vertCol.emplace_back(s.colour);
-//	}
-//
-//	debugLinesMesh->SetVertexPositions(vertPos);
-//	debugLinesMesh->SetVertexColours(vertCol);
-//	debugLinesMesh->UpdateGPUBuffers(0, (unsigned int)vertPos.size());
-//
-//	BindMesh(debugLinesMesh);
-//	DrawBoundMesh();
-//
-//	debugLines.clear();
-//}
-
 #ifdef _WIN32
 void OGLRenderer::InitWithWin32(Window& w) {
 	Win32Code::Win32Window* realWindow = (Win32Code::Win32Window*)&w;
 
 	if (!(deviceContext = GetDC(realWindow->GetHandle()))) {
-		std::cout << __FUNCTION__ << " Failed to create window!" << std::endl;
+		std::cout << __FUNCTION__ << " Failed to create window!\n";
 		return;
 	}
 
@@ -237,40 +181,40 @@ void OGLRenderer::InitWithWin32(Window& w) {
 	PIXELFORMATDESCRIPTOR pfd;
 	memset(&pfd, 0, sizeof(PIXELFORMATDESCRIPTOR));
 
-	pfd.nSize		= sizeof(PIXELFORMATDESCRIPTOR);
-	pfd.nVersion	= 1;
-	pfd.dwFlags		= PFD_DOUBLEBUFFER | PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW;   //It must be double buffered, it must support OGL(!), and it must allow us to draw to it...
-	pfd.iPixelType	= PFD_TYPE_RGBA;	//We want our front / back buffer to have 4 channels!
-	pfd.cColorBits	= 32;				//4 channels of 8 bits each!
-	pfd.cDepthBits	= 24;				//24 bit depth buffer
-	pfd.cStencilBits = 8;				//plus an 8 bit stencil buffer
-	pfd.iLayerType	= PFD_MAIN_PLANE;
+	pfd.nSize			= sizeof(PIXELFORMATDESCRIPTOR);
+	pfd.nVersion		= 1;
+	pfd.dwFlags			= PFD_DOUBLEBUFFER | PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW;   //It must be double buffered, it must support OGL(!), and it must allow us to draw to it...
+	pfd.iPixelType		= PFD_TYPE_RGBA;	//We want our front / back buffer to have 4 channels!
+	pfd.cColorBits		= 32;				//4 channels of 8 bits each!
+	pfd.cDepthBits		= 24;				//24 bit depth buffer
+	pfd.cStencilBits	= 8;				//plus an 8 bit stencil buffer
+	pfd.iLayerType		= PFD_MAIN_PLANE;
 
 	GLuint		PixelFormat;
 	if (!(PixelFormat = ChoosePixelFormat(deviceContext, &pfd))) {	// Did Windows Find A Matching Pixel Format for our PFD?
-		std::cout << __FUNCTION__ << " Failed to choose a pixel format!" << std::endl;
+		std::cout << __FUNCTION__ << " Failed to choose a pixel format!\n";
 		return;
 	}
 
 	if (!SetPixelFormat(deviceContext, PixelFormat, &pfd)) {		// Are We Able To Set The Pixel Format?
-		std::cout << __FUNCTION__ << " Failed to set a pixel format!" << std::endl;
+		std::cout << __FUNCTION__ << " Failed to set a pixel format!\n";
 		return;
 	}
 
 	HGLRC		tempContext;		//We need a temporary OpenGL context to check for OpenGL 3.2 compatibility...stupid!!!
 	if (!(tempContext = wglCreateContext(deviceContext))) {	// Are We Able To get the temporary context?
-		std::cout << __FUNCTION__ <<"  Cannot create a temporary context!" << std::endl;
+		std::cout << __FUNCTION__ <<"  Cannot create a temporary context!\n";
 		wglDeleteContext(tempContext);
 		return;
 	}
 
 	if (!wglMakeCurrent(deviceContext, tempContext)) {	// Try To Activate The Rendering Context
-		std::cout << __FUNCTION__ << " Cannot set temporary context!" << std::endl;
+		std::cout << __FUNCTION__ << " Cannot set temporary context!\n";
 		wglDeleteContext(tempContext);
 		return;
 	}
 	if (!gladLoaderLoadGL()) {
-		std::cout << __FUNCTION__ << " Cannot initialise GLAD!" << std::endl;	//It's all gone wrong!
+		std::cout << __FUNCTION__ << " Cannot initialise GLAD!\n";	//It's all gone wrong!
 		return;
 	}
 	//Now we have a temporary context, we can find out if we support OGL 4.x
@@ -278,14 +222,14 @@ void OGLRenderer::InitWithWin32(Window& w) {
 	int major = ver[0] - '0';		//casts the 'correct' major version integer from our version string
 	int minor = ver[2] - '0';		//casts the 'correct' minor version integer from our version string
 
-	if (major < 3) {					//Graphics hardware does not support OGL 4! Erk...
-		std::cout << __FUNCTION__ << " Device does not support OpenGL 4.x!" << std::endl;
+	if (major < 4) {					//Graphics hardware does not support OGL 4! Erk...
+		std::cout << __FUNCTION__ << " Device does not support OpenGL 4.x!\n";
 		wglDeleteContext(tempContext);
 		return;
 	}
 
 	if (major == 4 && minor < 1) {	//Graphics hardware does not support ENOUGH of OGL 4! Erk...
-		std::cout << __FUNCTION__ << " Device does not support OpenGL 4.1!" << std::endl;
+		std::cout << __FUNCTION__ << " Device does not support at least OpenGL 4.1!\n";
 		wglDeleteContext(tempContext);
 		return;
 	}
@@ -385,6 +329,6 @@ static void APIENTRY DebugCallback(GLenum source, GLenum type, GLuint id, GLenum
 	case GL_DEBUG_SEVERITY_LOW: severityName = "Priority(Low)"; break;
 	}
 
-	std::cout << "OpenGL Debug Output: " + sourceName + ", " + typeName + ", " + severityName + ", " + string(message) << std::endl;
+	std::cout << "OpenGL Debug Output: " + sourceName + ", " + typeName + ", " + severityName + ", " + string(message) + "\n";
 }
 #endif

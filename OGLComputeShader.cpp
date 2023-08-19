@@ -1,11 +1,10 @@
-/*
-Part of Newcastle University's Game Engineering source code.
+/******************************************************************************
+This file is part of the Newcastle OpenGL Tutorial Series
 
-Use as you see fit!
-
-Comments and queries to: richard-gordon.davison AT ncl.ac.uk
-https://research.ncl.ac.uk/game/
-*/
+Author:Rich Davison
+Contact:richgdavison@gmail.com
+License: MIT (see LICENSE file at the top of the source tree)
+*/////////////////////////////////////////////////////////////////////////////
 #include "OGLComputeShader.h"
 #include "OGLShader.h"
 #include "Assets.h"
@@ -36,7 +35,7 @@ OGLComputeShader::OGLComputeShader(const std::string& s)	{
 	}
 	else {
 		std::cout << "Compute shader loaded!\n";		
-		glGetProgramiv(programID, GL_COMPUTE_WORK_GROUP_SIZE, threadsInGroup.array);
+		glGetProgramiv(programID, GL_COMPUTE_WORK_GROUP_SIZE, (int*) & threadsInGroup);
 	}
 	OGLShader::PrintCompileLog(shaderID);
 };

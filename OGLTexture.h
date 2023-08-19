@@ -1,44 +1,40 @@
-/*
-Part of Newcastle University's Game Engineering source code.
+/******************************************************************************
+This file is part of the Newcastle OpenGL Tutorial Series
 
-Use as you see fit!
-
-Comments and queries to: richard-gordon.davison AT ncl.ac.uk
-https://research.ncl.ac.uk/game/
-*/
+Author:Rich Davison
+Contact:richgdavison@gmail.com
+License: MIT (see LICENSE file at the top of the source tree)
+*/////////////////////////////////////////////////////////////////////////////
 #pragma once
 #include "Texture.h"
 #include "glad\gl.h"
 
-namespace NCL {
-	namespace Rendering {
-		class OGLTexture : public Texture
-		{
-		public:
-			//friend class OGLRenderer;
-			 OGLTexture();
-			 OGLTexture(GLuint texToOwn);
-			~OGLTexture();
+namespace NCL::Rendering {		
+	using UniqueOGLTexture = std::unique_ptr<class OGLTexture>;
+	using SharedOGLTexture = std::shared_ptr<class OGLTexture>;
 
-			static Texture* RGBATextureFromData(char* data, int width, int height, int channels);
+	class OGLTexture : public Texture	{
+	public:
+		OGLTexture();
+		OGLTexture(GLuint texToOwn);
+		~OGLTexture();
 
-			static Texture* RGBATextureFromFilename(const std::string&name);
+		static UniqueOGLTexture TextureFromData(char* data, int width, int height, int channels);
 
-			static Texture* LoadCubemap(
-				const std::string& xPosFile,
-				const std::string& xNegFile,
-				const std::string& yPosFile,
-				const std::string& yNegFile,
-				const std::string& zPosFile,
-				const std::string& zNegFile);
+		static UniqueOGLTexture TextureFromFile(const std::string&name);
 
+		static UniqueOGLTexture LoadCubemap(
+			const std::string& xPosFile,
+			const std::string& xNegFile,
+			const std::string& yPosFile,
+			const std::string& yNegFile,
+			const std::string& zPosFile,
+			const std::string& zNegFile);
 
-			GLuint GetObjectID() const	{
-				return texID;
-			}
-		protected:						
-			GLuint texID;
-		};
-	}
+		GLuint GetObjectID() const	{
+			return texID;
+		}
+	protected:						
+		GLuint texID;
+	};
 }
-
