@@ -37,8 +37,8 @@ namespace NCL::Rendering {
 		void	DeleteIDs();
 
 		GLuint	programID;
-		GLuint	shaderIDs[(int)ShaderStages::MAXSIZE];
-		int		shaderValid[(int)ShaderStages::MAXSIZE];
+		GLuint	shaderIDs[(int)ShaderStages::MAX_SIZE];
+		int		shaderValid[(int)ShaderStages::MAX_SIZE];
 		int		programValid;
 	};
 }

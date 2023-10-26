@@ -13,7 +13,7 @@ using namespace NCL::Rendering;
 
 using std::string;
 
-GLuint shaderTypes[(int)ShaderStages::MAXSIZE] = {
+GLuint shaderTypes[(int)ShaderStages::MAX_SIZE] = {
 	GL_VERTEX_SHADER,
 	GL_FRAGMENT_SHADER,
 	GL_GEOMETRY_SHADER,
@@ -21,7 +21,7 @@ GLuint shaderTypes[(int)ShaderStages::MAXSIZE] = {
 	GL_TESS_EVALUATION_SHADER
 };
 
-string shaderNames[(int)ShaderStages::MAXSIZE] = {
+string shaderNames[(int)ShaderStages::MAX_SIZE] = {
 	"Vertex",
 	"Fragment",
 	"Geometry",
@@ -32,7 +32,7 @@ string shaderNames[(int)ShaderStages::MAXSIZE] = {
 OGLShader::OGLShader(const string& vertex, const string& fragment, const string& geometry, const string& domain, const string& hull) :
 	Shader(vertex, fragment, geometry, domain, hull) {
 
-	for (int i = 0; i < (int)ShaderStages::MAXSIZE; ++i) {
+	for (int i = 0; i < (int)ShaderStages::MAX_SIZE; ++i) {
 		shaderIDs[i]	= 0;
 		shaderValid[i]	= 0;
 	}
@@ -49,7 +49,7 @@ void OGLShader::ReloadShader() {
 	DeleteIDs();
 	programID = glCreateProgram();
 	string fileContents = "";
-	for (int i = 0; i < (int)ShaderStages::MAXSIZE; ++i) {
+	for (int i = 0; i < (int)ShaderStages::MAX_SIZE; ++i) {
 		if (!shaderFiles[i].empty()) {
 			if (Assets::ReadTextFile(Assets::SHADERDIR + shaderFiles[i], fileContents)) {
 				Preprocessor(fileContents);
@@ -92,7 +92,7 @@ void	OGLShader::DeleteIDs() {
 	if (!programID) {
 		return;
 	}
-	for (int i = 0; i < (int)ShaderStages::MAXSIZE; ++i) {
+	for (int i = 0; i < (int)ShaderStages::MAX_SIZE; ++i) {
 		if (shaderIDs[i]) {
 			glDetachShader(programID, shaderIDs[i]);
 			glDeleteShader(shaderIDs[i]);
