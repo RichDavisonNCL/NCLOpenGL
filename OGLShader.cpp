@@ -139,9 +139,10 @@ bool	OGLShader::Preprocessor(string& shaderFile) {
 
 		std::string_view substr = std::string_view(shaderFile).substr(lineStart, lineLength);
 
+		size_t hasComment = substr.find("//");
 		size_t hasInclude = substr.find("#include");
 		 
-		if (hasInclude != string::npos) {
+		if (hasComment== string::npos && hasInclude != string::npos) {
 			size_t nameStart	= substr.find_first_of("\"");
 			size_t nameEnd		= substr.find_last_of("\"");
 

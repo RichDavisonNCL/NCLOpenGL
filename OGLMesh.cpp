@@ -144,15 +144,16 @@ void OGLMesh::RecalculateNormals() {
 			Vector3& b = positions[indices[i+1]];
 			Vector3& c = positions[indices[i+2]];
 
-			Vector3 normal = Vector3::Cross(b - a, c - a);
-			normal.Normalise();
+			Vector3 normal = Vector::Cross(b - a, c - a);
+
+			normal = Vector::Normalise(normal);
 
 			normals[indices[i + 0]] += normal;
 			normals[indices[i + 1]] += normal;
 			normals[indices[i + 2]] += normal;
 		}
 		for (size_t i = 0; i < normals.size(); ++i) {
-			normals[i].Normalise();
+			normals[i] = Vector::Normalise(normals[i]);
 		}
 	}
 	else {

@@ -9,6 +9,7 @@ License: MIT (see LICENSE file at the top of the source tree)
 #include "OGLShader.h"
 #include "OGLMesh.h"
 #include "OGLTexture.h"
+#include "OGLBuffer.h"
 
 #include "SimpleFont.h"
 #include "TextureLoader.h"
@@ -58,7 +59,7 @@ void OGLRenderer::OnWindowResize(int w, int h)	 {
 }
 
 void OGLRenderer::BeginFrame()		{
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 	glBindVertexArray(0);
 	glUseProgram(0);
@@ -73,6 +74,14 @@ void OGLRenderer::EndFrame()		{
 
 void OGLRenderer::SwapBuffers()   {
 	::SwapBuffers(deviceContext);
+}
+
+void OGLRenderer::BindBufferAsUBO(const OGLBuffer& b, GLuint slotID) {
+	glBindBufferBase(GL_UNIFORM_BUFFER, slotID, b.gpuID);
+}
+
+void OGLRenderer::BindBufferAsSSBO(const OGLBuffer& b, GLuint slotID) {
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, slotID, b.gpuID);
 }
 
 void OGLRenderer::UseShader(const OGLShader& oglShader) {
@@ -120,14 +129,17 @@ void OGLRenderer::DrawBoundMesh(int subLayer, int numInstances) {
 		count  = m->count;
 	}
 
-	switch (boundMesh->GetPrimitiveType()) {
-		case GeometryPrimitive::Triangles:		mode = GL_TRIANGLES;		break;
-		case GeometryPrimitive::Points:			mode = GL_POINTS;			break;
-		case GeometryPrimitive::Lines:			mode = GL_LINES;			break;
-		case GeometryPrimitive::TriangleFan:	mode = GL_TRIANGLE_FAN;		break;
-		case GeometryPrimitive::TriangleStrip:	mode = GL_TRIANGLE_STRIP;	break;
-		case GeometryPrimitive::Patches:		mode = GL_PATCHES;			break;
-	}
+	//Ordered the same as the GeometryPrimitive enum in Mesh
+	static GLenum primitiveLookup[] = {
+		GL_POINTS,
+		GL_LINES,
+		GL_TRIANGLES,
+		GL_TRIANGLE_FAN,
+		GL_TRIANGLE_STRIP,
+		GL_PATCHES
+	};
+
+	mode = primitiveLookup[boundMesh->GetPrimitiveType()];
 
 	if (numInstances > 1) {
 		if (boundMesh->GetIndexCount() > 0) {
@@ -275,8 +287,6 @@ void OGLRenderer::InitWithWin32(Window& w) {
 	initState = true; 
 
 	wglSwapIntervalEXT = (PFNWGLSWAPINTERVALEXTPROC)wglGetProcAddress("wglSwapIntervalEXT");
-
-	w.SetRenderer(this);
 }
 
 void OGLRenderer::DestroyWithWin32() {

@@ -19,7 +19,7 @@ namespace NCL::Rendering {
 		OGLTexture(GLuint texToOwn);
 		~OGLTexture();
 
-		static UniqueOGLTexture TextureFromData(char* data, int width, int height, int channels);
+		static UniqueOGLTexture TextureFromData(char* data, uint32_t width, uint32_t height, uint32_t channels);
 
 		static UniqueOGLTexture TextureFromFile(const std::string&name);
 

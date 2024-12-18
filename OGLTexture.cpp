@@ -25,7 +25,7 @@ OGLTexture::~OGLTexture()	{
 	glDeleteTextures(1, &texID);
 }
 
-UniqueOGLTexture OGLTexture::TextureFromData(char* data, int width, int height, int channels) {
+UniqueOGLTexture OGLTexture::TextureFromData(char* data, uint32_t width, uint32_t height, uint32_t channels) {
 	UniqueOGLTexture tex = std::make_unique<OGLTexture>();
 	tex->dimensions = { width, height };
 
@@ -55,11 +55,11 @@ UniqueOGLTexture OGLTexture::TextureFromData(char* data, int width, int height, 
 }
 
 UniqueOGLTexture OGLTexture::TextureFromFile(const std::string&name) {
-	char* texData	= nullptr;
-	int width		= 0;
-	int height		= 0;
-	int channels	= 0;
-	int flags		= 0;
+	char* texData		= nullptr;
+	uint32_t width		= 0;
+	uint32_t height		= 0;
+	uint32_t channels	= 0;
+	uint32_t flags		= 0;
 	TextureLoader::LoadTexture(name, texData, width, height, channels, flags);  
 
 	UniqueOGLTexture glTex = TextureFromData(texData, width, height, channels);
@@ -78,10 +78,10 @@ UniqueOGLTexture OGLTexture::LoadCubemap(
 	const std::string& zNegFile) {
 
 	const std::string* filenames[6] = {&xPosFile,&xNegFile,&yPosFile,&yNegFile,&zPosFile,&zNegFile};
-	int width[6] = { 0 };
-	int height[6] = { 0 };
-	int channels[6] = { 0 };
-	int flags[6] = { 0 };
+	uint32_t width[6] = { 0 };
+	uint32_t height[6] = { 0 };
+	uint32_t channels[6] = { 0 };
+	uint32_t flags[6] = { 0 };
 
 	std::vector<char*> texData(6, nullptr);
 
